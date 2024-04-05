@@ -1,0 +1,11 @@
+proxy:
+  http: "http://example.com:8080"
+  https: "http://example.com:8080"
+  ALL: socks5://127.0.0.1:7890
+plugin:
+  some_plugin: "plugin_config_value"
+token: "your_token_here"
+admin:
+  - 123
+  - 456
+name: "Aldotai"
