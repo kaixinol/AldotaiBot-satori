@@ -1,5 +1,6 @@
-from collections.abc import Callable
-from dataclasses import dataclass, replace, field
+from dataclasses import field
+
+from pydantic.dataclasses import dataclass
 from typing import TypeVar
 from yaml import safe_load
 
@@ -15,11 +16,11 @@ class Config:
     name: str = 'Aldotai'
 
 
-config = Config()
+config: Config | None = None
 
 
-def load_config(after_loaded: Callable[[Config],None] = lambda x: None):
+def load_config():
     global config
     with open('config.yaml') as fp:
-        config = replace(config, **safe_load(fp))
-    after_loaded(config)
+        config = Config(**safe_load(fp))
+    return config
