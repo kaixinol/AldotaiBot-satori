@@ -5,7 +5,7 @@
 groups = ["default"]
 strategy = ["cross_platform", "inherit_metadata"]
 lock_version = "4.4.1"
-content_hash = "sha256:47862ffa2a6f5ac5e1b1504a2e3b1da8d78dbbbe7b642b2365185034325f3389"
+content_hash = "sha256:8638fdd0c06fa4e1bd7c7d605bf6a4494bba7546285060e566eabd3676d96efe"
 
 [[package]]
 name = "aiohttp"
@@ -127,7 +127,7 @@ files = [
 
 [[package]]
 name = "arclet-entari"
-version = "0.3.0"
+version = "0.3.1"
 requires_python = ">=3.9"
 summary = "Simple IM Framework based on satori-python"
 groups = ["default"]
@@ -140,8 +140,8 @@ dependencies = [
     "satori-python-core>=0.11.5",
 ]
 files = [
-    {file = "arclet_entari-0.3.0-py3-none-any.whl", hash = "sha256:64a50687c47396fb490ce0f7071b7beb9cca3af2ec9f73f6911c7575f472cb24"},
-    {file = "arclet_entari-0.3.0.tar.gz", hash = "sha256:9b1762cfc70096c0b0b69e084ec6ea515f90b9e77124dc04c00532623e98609b"},
+    {file = "arclet_entari-0.3.1-py3-none-any.whl", hash = "sha256:00b7d1d2c918082d8cb3e7f201e37db3cbe14e960279e1d07d1e68707a1814dc"},
+    {file = "arclet_entari-0.3.1.tar.gz", hash = "sha256:9508eabf6b53d0e90a664318441a211e9ce798f9ab0cdce0e6ccbf1f4f68e6fd"},
 ]
 
 [[package]]

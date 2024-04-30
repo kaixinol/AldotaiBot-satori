@@ -3,8 +3,10 @@ proxy:
   https: "http://example.com:8080"
   ALL: socks5://127.0.0.1:7890
 plugin:
-  Welcome: true
-  ChatGPT: {}
+  Welcome: false
+  ChatGPT:
+    key: xxx
+    base_url: xxx
 auth_token: "your_token_here"
 qq:
   port: 5501
