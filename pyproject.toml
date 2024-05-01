@@ -7,7 +7,7 @@ authors = [
 ]
 dependencies = [
     "satori-python>=0.11.4",
-    "arclet-entari>=0.1.0",
+    "arclet-entari>=0.3.0",
     "pydantic>=2.6.4",
 ]
 requires-python = ">=3.11"
