@@ -9,6 +9,11 @@ dependencies = [
     "satori-python>=0.11.4",
     "arclet-entari>=0.3.0",
     "pydantic>=2.6.4",
+    "openai>=1.25.0",
+    "schedule>=1.2.1",
+    "loguru>=0.7.2",
+    "httpx>=0.27.0",
+    "socksio>=1.0.0",
 ]
 requires-python = ">=3.11"
 readme = "README.md"

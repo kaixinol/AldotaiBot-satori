@@ -6,7 +6,7 @@ plugin:
   Welcome: false
   ChatGPT:
     key: xxx
-    base_url: xxx
+    api: xxx
 auth_token: "your_token_here"
 qq:
   port: 5501

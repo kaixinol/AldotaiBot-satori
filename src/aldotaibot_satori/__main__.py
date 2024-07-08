@@ -1,15 +1,17 @@
-from utils.setting import load_config
-from arclet.entari import ContextSession, Entari, WebsocketsInfo,EntariCommands
-from arclet.entari.plugin import load_plugin
+from pathlib import Path
 
+from .utils.setting import load_config
+from arclet.entari import Entari, WebsocketsInfo,EntariCommands
+from arclet.entari.plugin import load_plugin
+config = load_config(Path(__file__).parent /  Path('_config.yaml'))
 app = Entari()
-tmp = load_config().plugin
+tmp = config.plugin
 plugins = [i for i in tmp if tmp[i]]
 commands = EntariCommands().current()
 
 for i in plugins:
-    load_plugin(f'plugins.{i}')
-app.apply(WebsocketsInfo(port=5501,
-                         token='38be6838db388ba3f921457064850590bf2d65fadd5aeaa4288f41711e5b60ca'))
+    load_plugin(f'aldotaibot_satori.plugins.{i}')
+app.apply(WebsocketsInfo(port=config.qq['port'],
+                         token=config.auth_token))
 
 app.run()
