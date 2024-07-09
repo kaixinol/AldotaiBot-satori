@@ -1,17 +1,38 @@
 proxy:
-  http: "http://example.com:8080"
-  https: "http://example.com:8080"
-  ALL: socks5://127.0.0.1:7890
+  http: xx
+  https: xx
+  ALL: xx
 plugin:
-  Welcome: false
+  Welcome:
+    doc: https://docs.qq.com/doc/DZU5yanVJeVZlQ2pm
   ChatGPT:
-    key: xxx
-    api: xxx
-auth_token: "your_token_here"
+    key: sk-xx
+    api: https://api.chatanywhere.com.cn/
+    model: gpt-4-turbo
+  AutoAcceptRequest: true
+  KeywordReply:
+    regex:
+    - - "(.{0,3})(设置|圈名)(.{0,3})(设置|圈名)(.{0,3})"
+      - "发送\n/设置圈名[你的圈名]\n不需要带空格"
+    - - "(.{0,3})(上传|设定)(.{0,3})(上传|设定)(.{0,3})"
+      - "发送\n/上传设定\n不需要带空格"
+    - - 我是(?P<name>\S+)
+      - 你好\g<name>!
+    keywords:
+    - - "我是傻逼"
+      - "你好!!我也是傻逼"
+    - - "不会画画"
+      - "你好，我也不会！！"
+    - - "教我画画"
+      - "你也教我画画！！"
+    - - "你是谁"
+      - "我是阿尔多泰！"
+    - - "我是傻逼"
+      - "你好，我也是傻逼！"
+auth_token: xx
 qq:
   port: 5501
-  id: 123456789
+  id: xx
 admin:
   - 123
-  - 456
 name: "Aldotai"
