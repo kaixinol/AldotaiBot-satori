@@ -1,17 +1,16 @@
 import re
 
-from arclet.entari import Plugin, Session, Quote, Text, MessageChain
+from arclet.entari import PluginMetadata, Session, Quote, MessageChain
 from arclet.entari.event import MessageCreatedEvent
 from aldotaibot_satori.plugins import AUTHOR
 
 from ..utils.setting import config
 from satori import select, Author
 
-plug = Plugin(author=AUTHOR, name=__name__)
-disp_msg_request = plug.dispatch(MessageCreatedEvent)
+__plugin_metadata__ = PluginMetadata(author=AUTHOR, name=__name__)
 
 
-@disp_msg_request.on()
+@MessageCreatedEvent.dispatch().on()
 async def _(event: MessageCreatedEvent, session: Session, msg: MessageChain):
     if event.quote and (authors := select(event.quote, Author)):
         if authors[0].id != event.account.self_id:

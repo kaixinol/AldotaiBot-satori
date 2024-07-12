@@ -6,7 +6,7 @@ from yaml import safe_load
 
 @dataclass
 class Config:
-    qq: dict[str, int]
+    port: int
     proxy: dict[str, str]
     plugin: dict[str, bool | dict]
     admin: list[int]

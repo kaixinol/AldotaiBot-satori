@@ -1,25 +1,21 @@
 # 移植自 https://github.com/kaixinol/AldotaiBot/blob/main/plugins/ChatGPT.py
 from collections.abc import Callable, Awaitable
+from pathlib import Path
 
 import schedule
-from arclet.entari import (MessageCreatedEvent, Plugin, EntariCommands, At, Quote,
-                           is_direct_message, is_public_message, Session
-                           )
+from arclet.entari import MessageCreatedEvent, PluginMetadata, At, Quote, is_direct_message, is_public_message, Session
 from loguru import logger
 from openai import AsyncOpenAI
 from openai import OpenAIError
 from satori import select, Author
 from . import AUTHOR
 from ..utils.setting import config
-
+from yaml import safe_load
 aclient = AsyncOpenAI(api_key=config.plugin['ChatGPT']['key'])
 aclient.base_url = config.plugin['ChatGPT']['api']
 aclient.proxy = {"https": config.proxy}
-plug = Plugin(author=AUTHOR, name=__name__)
-disp_message = plug.dispatch(MessageCreatedEvent)
-
-commands = EntariCommands.current()
-
+__plugin_metadata__ = PluginMetadata(author=AUTHOR, name=__name__)
+dicts = safe_load(open(Path('../res/黑话解释.yaml').resolve()))
 data_set: dict[str, list[dict]] = {}
 usage_limit: dict = {}
 
@@ -74,7 +70,7 @@ async def chat(msg: str, usr_id: str,
         return "啧啧 似乎发生了什么不得了的错误 已记录下此错误，等待主人排查喔"
 
 
-@disp_message.on(auxiliaries=[is_direct_message])
+@MessageCreatedEvent.dispatch().on(auxiliaries=[is_direct_message])
 async def _(event: MessageCreatedEvent, session: Session):
     pure_msg = event.content.extract_plain_text().strip()
     if pure_msg[-1] != '/':
@@ -84,14 +80,35 @@ async def _(event: MessageCreatedEvent, session: Session):
         await session.send([Quote(event.message.id), msg])
 
     async def generate_init_msg():
-        return {"role": "system",
-                "content": f'{INIT_MSG}\n正在和你聊天的用户昵称叫「{event.user.nick}」'}
+        user_name = f'叫「{event.user.name}」' or f'叫「{event.user.nick}」' or "是未知的"
+        return {
+            "role": "system",
+            "content": f'{INIT_MSG}\n正在和你聊天的用户昵称{user_name}'
+        }
 
     await send_message(await chat(pure_msg, event.user.id, send_message,
                                   generate_init_msg))
 
 
-@disp_message.on(auxiliaries=[is_public_message])
+def parser(words: str, dicts: dict):
+    for key, value in dicts.items():
+        if (isinstance(key, tuple) and words.lower() in key) or words.lower() == key:
+            return value
+
+
+def scan_and_get_desc(words: str, dicts: dict):
+    keys = [
+        item if isinstance(item, str) else k
+        for item in dicts.keys()
+        for k in (item if isinstance(item, tuple) else (item,))
+    ]
+    _ = [key + '的意思是：' + parser(key, dicts) for key in keys if key in words]
+    if not _:
+        return '\n以下是帮助你理解的一些词语意思：\n' + '\n'.join(_)
+    return ''
+
+
+@MessageCreatedEvent.dispatch().on(auxiliaries=[is_public_message])
 async def _(event: MessageCreatedEvent, session: Session):
     if event.quote and (authors := select(event.quote, Author)):
         if authors[0].id != event.account.self_id:
@@ -105,13 +122,17 @@ async def _(event: MessageCreatedEvent, session: Session):
             await session.send([Quote(event.message.id), msg])
 
         async def generate_init_msg():
-            return {"role": "system",
-                    "content": f'{INIT_MSG}\n正在和你聊天的用户昵称叫「{event.user.name}」'}
-        reply = await chat(pure_msg, event.user.id, send_message,
-                                      generate_init_msg)
+            user_name = f'叫「{event.user.name}」' or f'叫「{event.user.nick}」' or "是未知的"
+            return {
+                "role": "system",
+                "content": f'{INIT_MSG}\n正在和你聊天的用户昵称{user_name}'
+            }
+
+        reply = await chat(pure_msg + scan_and_get_desc(pure_msg,dicts), event.user.id, send_message,
+                           generate_init_msg)
         logger.debug(f'<{event.user.id}>{pure_msg}')
         logger.debug(reply)
         await send_message(reply)
-        print(data_set)
+
 
 schedule.every().day.do(update_usage_limit)

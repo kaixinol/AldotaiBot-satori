@@ -30,9 +30,7 @@ plugin:
     - - "我是傻逼"
       - "你好，我也是傻逼！"
 auth_token: xx
-qq:
-  port: 5501
-  id: xx
+port: 5501
 admin:
   - 123
 name: "Aldotai"
