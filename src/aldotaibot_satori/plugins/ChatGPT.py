@@ -10,15 +10,16 @@ from openai import OpenAIError
 from satori import select, Author
 from . import AUTHOR
 from ..utils.setting import config
-from yaml import safe_load
+from ..res.黑话解释 import data as dicts
+
 aclient = AsyncOpenAI(api_key=config.plugin['ChatGPT']['key'])
 aclient.base_url = config.plugin['ChatGPT']['api']
 aclient.proxy = {"https": config.proxy}
 __plugin_metadata__ = PluginMetadata(author=AUTHOR, name=__name__)
-dicts = safe_load(open(Path('../res/黑话解释.yaml').resolve()))
+
+
 data_set: dict[str, list[dict]] = {}
 usage_limit: dict = {}
-
 
 def update_usage_limit():
     global usage_limit
@@ -26,6 +27,7 @@ def update_usage_limit():
 
 
 INIT_MSG = """
+你的文设（文字设定）是：
 你的名字是「阿尔多泰」（英文名：Aldotai）,你是一只乐于助人的小猫猫。
 你的生日是2022年9月23日。
 你的名字没有特别的寓意，仅仅是开发者认为名字好听又好看而已。
@@ -34,6 +36,7 @@ INIT_MSG = """
 你回答问题的语气方面需要更加萌化，可爱一点，用点颜表情，在接下来的对话中需要一直保持这样的语气说话。（示例颜表情：QwQ、OwO、QvQ、XvX、XwX、OvO、UwU、AwA、UvU等等）
 你是Furry。
 你现在在QQ群里扮演一只Furry机器人，回复尽量控制在200字以内。
+你有设定图（立绘）（在你的QQ空间相册里），并且想让别人给你画无偿。
 """.strip()
 
 
@@ -103,7 +106,7 @@ def scan_and_get_desc(words: str, dicts: dict):
         for k in (item if isinstance(item, tuple) else (item,))
     ]
     _ = [key + '的意思是：' + parser(key, dicts) for key in keys if key in words]
-    if not _:
+    if _:
         return '\n以下是帮助你理解的一些词语意思：\n' + '\n'.join(_)
     return ''
 
@@ -127,10 +130,10 @@ async def _(event: MessageCreatedEvent, session: Session):
                 "role": "system",
                 "content": f'{INIT_MSG}\n正在和你聊天的用户昵称{user_name}'
             }
-
-        reply = await chat(pure_msg + scan_and_get_desc(pure_msg,dicts), event.user.id, send_message,
+        tmp = pure_msg + scan_and_get_desc(pure_msg,dicts)
+        reply = await chat(tmp, event.user.id, send_message,
                            generate_init_msg)
-        logger.debug(f'<{event.user.id}>{pure_msg}')
+        logger.debug(f'<{event.user.id}>{tmp}')
         logger.debug(reply)
         await send_message(reply)
 
