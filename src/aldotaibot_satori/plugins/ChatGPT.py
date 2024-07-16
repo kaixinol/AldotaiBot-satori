@@ -1,4 +1,5 @@
 # 移植自 https://github.com/kaixinol/AldotaiBot/blob/main/plugins/ChatGPT.py
+import re
 from collections.abc import Callable, Awaitable
 from pathlib import Path
 
@@ -17,9 +18,9 @@ aclient.base_url = config.plugin['ChatGPT']['api']
 aclient.proxy = {"https": config.proxy}
 __plugin_metadata__ = PluginMetadata(author=AUTHOR, name=__name__)
 
-
 data_set: dict[str, list[dict]] = {}
 usage_limit: dict = {}
+
 
 def update_usage_limit():
     global usage_limit
@@ -49,12 +50,11 @@ async def chat(msg: str, usr_id: str,
     if usr_id in data_set:
         for i in data_set[usr_id]:
             token += round(len(i["content"]) * 2)
-        if token > 6000:
-            data_set[usr_id].remove(data_set[usr_id][1])
-            data_set[usr_id].remove(data_set[usr_id][1])
-            await send_message("哎呀 阿尔多泰要记住的上下文太多了 只能忘记最久远的一个问题了🥲")
-    if usr_id in usage_limit and usage_limit[usr_id] > 64 and usr_id not in config['admin']:
-        return "您的每日使用次数已用尽（64次）"
+        if token > 10000:
+            data_set[usr_id] = data_set[usr_id][:1] + data_set[usr_id][-2:]
+            await send_message("哎呀 阿尔多泰要记住的上下文太多了，忘记了很多对话了")
+    if usr_id in usage_limit and usage_limit[usr_id] > 16 and usr_id not in config['admin']:
+        return "您的每日使用次数已用尽（16次）"
     try:
         if usr_id not in data_set:
             data_set[usr_id] = []
@@ -83,7 +83,9 @@ async def _(event: MessageCreatedEvent, session: Session):
         await session.send([Quote(event.message.id), msg])
 
     async def generate_init_msg():
-        user_name = f'叫「{event.user.name}」' or f'叫「{event.user.nick}」' or "是未知的"
+        user_name = event.user.name or event.user.nick or "是未知的"
+        if user_name != "是未知的":
+            user_name = f'叫「{user_name}」'
         return {
             "role": "system",
             "content": f'{INIT_MSG}\n正在和你聊天的用户昵称{user_name}'
@@ -93,21 +95,25 @@ async def _(event: MessageCreatedEvent, session: Session):
                                   generate_init_msg))
 
 
-def parser(words: str, dicts: dict):
-    for key, value in dicts.items():
-        if (isinstance(key, tuple) and words.lower() in key) or words.lower() == key:
-            return value
+def split_desc(s: str) -> dict[tuple, str]:
+    kw, desc = s.split("：", 1)
+    kw = tuple(map(str.lower, kw.split("/"))) if "/" in kw else kw.lower()  # noqa
+    return {kw: desc.strip()}
+
+
+def parser(words: str, dicts: dict) -> str | None:
+    return next((value for key, value in dicts.items()
+                 if (isinstance(key, tuple) and words.lower() in key) or words.lower() == key), None)
 
 
 def scan_and_get_desc(words: str, dicts: dict):
-    keys = [
-        item if isinstance(item, str) else k
-        for item in dicts.keys()
-        for k in (item if isinstance(item, tuple) else (item,))
-    ]
-    _ = [key + '的意思是：' + parser(key, dicts) for key in keys if key in words]
-    if _:
-        return '\n以下是帮助你理解的一些词语意思：\n' + '\n'.join(_)
+    keys = [k for key in dicts.keys() for k in (key if isinstance(key, tuple) else (key,))]
+    eng = re.findall(r'[a-zA-Z]+', words)
+    ret = [parser(k, dicts) for k in keys if any(e.lower() == k for e in eng)]
+    words = re.sub(r'[a-zA-Z]+', '', words)
+    ret += [f'{k}的意思是：{parser(k, dicts)}' for k in keys if k in words]
+    if ret:
+        return '\n以下是帮助你理解的一些词语意思：\n' + '\n'.join(ret)
     return ''
 
 
@@ -125,12 +131,15 @@ async def _(event: MessageCreatedEvent, session: Session):
             await session.send([Quote(event.message.id), msg])
 
         async def generate_init_msg():
-            user_name = f'叫「{event.user.name}」' or f'叫「{event.user.nick}」' or "是未知的"
+            user_name = event.user.name or event.user.nick or "是未知的"
+            if user_name != "是未知的":
+                user_name = f'叫「{user_name}」'
             return {
                 "role": "system",
                 "content": f'{INIT_MSG}\n正在和你聊天的用户昵称{user_name}'
             }
-        tmp = pure_msg + scan_and_get_desc(pure_msg,dicts)
+
+        tmp = pure_msg + scan_and_get_desc(pure_msg, dicts)
         reply = await chat(tmp, event.user.id, send_message,
                            generate_init_msg)
         logger.debug(f'<{event.user.id}>{tmp}')
