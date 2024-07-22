@@ -1,7 +1,6 @@
 # 移植自 https://github.com/kaixinol/AldotaiBot/blob/main/plugins/ChatGPT.py
 import re
 from collections.abc import Callable, Awaitable
-from pathlib import Path
 
 import schedule
 from arclet.entari import MessageCreatedEvent, PluginMetadata, At, Quote, is_direct_message, is_public_message, Session
@@ -37,7 +36,6 @@ INIT_MSG = """
 你回答问题的语气方面需要更加萌化，可爱一点，用点颜表情，在接下来的对话中需要一直保持这样的语气说话。（示例颜表情：QwQ、OwO、QvQ、XvX、XwX、OvO、UwU、AwA、UvU等等）
 你是Furry。
 你现在在QQ群里扮演一只Furry机器人，回复尽量控制在200字以内。
-你有设定图（立绘）（在你的QQ空间相册里），并且想让别人给你画无偿。
 """.strip()
 
 
@@ -51,9 +49,12 @@ async def chat(msg: str, usr_id: str,
         for i in data_set[usr_id]:
             token += round(len(i["content"]) * 2)
         if token > 10000:
-            data_set[usr_id] = data_set[usr_id][:1] + data_set[usr_id][-2:]
+            if len(data_set[usr_id]) >= 3:
+                data_set[usr_id] = data_set[usr_id][:1] + data_set[usr_id][-2:]
+            else:
+                del data_set[usr_id]
             await send_message("哎呀 阿尔多泰要记住的上下文太多了，忘记了很多对话了")
-    if usr_id in usage_limit and usage_limit[usr_id] > 16 and usr_id not in config['admin']:
+    if usr_id in usage_limit and usage_limit[usr_id] > 16 and usr_id not in config.admin:
         return "您的每日使用次数已用尽（16次）"
     try:
         if usr_id not in data_set:
@@ -76,7 +77,7 @@ async def chat(msg: str, usr_id: str,
 @MessageCreatedEvent.dispatch().on(auxiliaries=[is_direct_message])
 async def _(event: MessageCreatedEvent, session: Session):
     pure_msg = event.content.extract_plain_text().strip()
-    if pure_msg[-1] != '/':
+    if pure_msg and pure_msg[-1] == '/':
         return
 
     async def send_message(msg: str):
