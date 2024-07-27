@@ -11,7 +11,6 @@ from satori import select, Author
 from . import AUTHOR
 from ..utils.setting import config
 from ..res.黑话解释 import data as dicts
-
 aclient = AsyncOpenAI(api_key=config.plugin['ChatGPT']['key'])
 aclient.base_url = config.plugin['ChatGPT']['api']
 aclient.proxy = {"https": config.proxy}
@@ -76,6 +75,9 @@ async def chat(msg: str, usr_id: str,
 
 @MessageCreatedEvent.dispatch().on(auxiliaries=[is_direct_message])
 async def _(event: MessageCreatedEvent, session: Session):
+    if event.quote and (authors := select(event.quote, Author)):
+        if authors[0].id != event.account.self_id:
+            return
     pure_msg = event.content.extract_plain_text().strip()
     if pure_msg and pure_msg[-1] == '/':
         return
@@ -143,8 +145,8 @@ async def _(event: MessageCreatedEvent, session: Session):
         tmp = pure_msg + scan_and_get_desc(pure_msg, dicts)
         reply = await chat(tmp, event.user.id, send_message,
                            generate_init_msg)
-        logger.debug(f'<{event.user.id}>{tmp}')
-        logger.debug(reply)
+        # logger.debug(f'<{event.user.id}>{tmp}')
+        # logger.debug(reply)
         await send_message(reply)
 
 
