@@ -4,11 +4,11 @@ proxy:
   ALL: xx
 plugin:
   Welcome:
-    doc: https://docs.qq.com/doc/DZU5yanVJeVZlQ2pm
+    doc: &doc https://docs.qq.com/doc/DZU5yanVJeVZlQ2pm
   ChatGPT:
     key: sk-xx
     api: https://api.chatanywhere.com.cn/
-    model: gpt-4-turbo
+    model: gpt-3.5-turbo-16k
   AutoAcceptRequest: true
   KeywordReply:
     regex:
@@ -29,6 +29,10 @@ plugin:
       - "我是阿尔多泰！"
     - - "我是傻逼"
       - "你好，我也是傻逼！"
+    - - "帮助"
+      - *doc
+    - - "help"
+      - *doc
 auth_token: xx
 port: 5501
 admin:
