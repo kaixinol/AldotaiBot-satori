@@ -75,6 +75,8 @@ async def chat(msg: str, usr_id: str,
 
 @MessageCreatedEvent.dispatch().on(auxiliaries=[is_direct_message])
 async def _(event: MessageCreatedEvent, session: Session):
+    if event.user is None or event.user.id == event.account.self_id:
+        return
     if event.quote and (authors := select(event.quote, Author)):
         if authors[0].id != event.account.self_id:
             return
@@ -122,6 +124,8 @@ def scan_and_get_desc(words: str, dicts: dict):
 
 @MessageCreatedEvent.dispatch().on(auxiliaries=[is_public_message])
 async def _(event: MessageCreatedEvent, session: Session):
+    if event.user is None or event.user.id == event.account.self_id:
+        return
     if event.quote and (authors := select(event.quote, Author)):
         if authors[0].id != event.account.self_id:
             return
@@ -129,7 +133,6 @@ async def _(event: MessageCreatedEvent, session: Session):
         pure_msg = event.content.extract_plain_text().strip()
         if pure_msg and pure_msg[-1] == '/':
             return
-
         async def send_message(msg: str):
             await session.send([Quote(event.message.id), msg])
 

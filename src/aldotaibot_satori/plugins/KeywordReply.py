@@ -10,12 +10,12 @@ from satori import select, Author
 __plugin_metadata__ = PluginMetadata(author=AUTHOR, name=__name__)
 
 
-@MessageCreatedEvent.dispatch().on()
+@MessageCreatedEvent.dispatch()
 async def _(event: MessageCreatedEvent, session: Session, msg: MessageChain):
     if event.quote and (authors := select(event.quote, Author)):
         if authors[0].id != event.account.self_id:
             return
-    if event.user.id == event.account.self_id or event.user is None:
+    if event.user is None or event.user.id == event.account.self_id:
         return
     for regex, reply in config.plugin['KeywordReply']['regex']:
         if re.match(regex, event.message.content) and all([kw != msg.extract_plain_text() for kw, _ in
